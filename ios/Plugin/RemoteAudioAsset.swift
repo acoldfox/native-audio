@@ -9,8 +9,23 @@ public class RemoteAudioAsset: AudioAsset {
 
         if let url = URL(string: path) {
             self.playerItem = AVPlayerItem(url: url)
+            self.playerItem?.addObserver(self, forKeyPath: "status", options: [.old, .new], context: nil)
             self.player = AVPlayer(playerItem: self.playerItem)
             self.player?.volume = volume
+            NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: self.playerItem, queue: nil) { _ in
+                print("播放已完成")
+                // 在这里处理播放完成的逻辑
+            }
+            // 确保在不需要监听时移除观察者
+//            NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: playerItem)
+
+        }
+    }
+    public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "status", let playerItem = object as? AVPlayerItem {
+            if playerItem.status == .failed {
+                print("Error: \(String(describing: playerItem.error))")
+            }
         }
     }
 
